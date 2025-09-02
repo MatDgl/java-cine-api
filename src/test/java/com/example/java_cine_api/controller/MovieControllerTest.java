@@ -27,7 +27,6 @@ class MovieControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    @SuppressWarnings("removal")
     private MovieService movieService;
 
     @Autowired
@@ -38,7 +37,8 @@ class MovieControllerTest {
         // Given
         CreateMovieDto createDto = new CreateMovieDto();
         createDto.setTitle("Test Movie");
-        createDto.setRating(8.5f);
+        // Respecte la contrainte @Max(5)
+        createDto.setRating(4.5f);
         createDto.setWishlist(true);
 
         Movie savedMovie = new Movie("Test Movie");
@@ -71,11 +71,10 @@ class MovieControllerTest {
     void shouldSearchMovies() throws Exception {
         // Given
         Map<String, Object> searchResult = Map.of(
-            "query", "test",
-            "limit", 20,
-            "total", 0,
-            "results", List.of()
-        );
+                "query", "test",
+                "limit", 20,
+                "total", 0,
+                "results", List.of());
         when(movieService.search("test", 20)).thenReturn(searchResult);
 
         // When & Then

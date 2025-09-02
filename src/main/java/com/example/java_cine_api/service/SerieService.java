@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -100,7 +101,9 @@ public class SerieService {
         List<Serie> series = serieRepository.findAllByOrderByCreatedAtDesc();
         List<Map<String, Object>> enrichedSeries = enrichPosterPath(series);
         
-        return Map.of("items", enrichedSeries);
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enrichedSeries);
+        return result;
     }
 
     /**
@@ -112,7 +115,9 @@ public class SerieService {
         List<Serie> series = serieRepository.findByWishlistTrue();
         List<Map<String, Object>> enrichedSeries = enrichPosterPath(series);
         
-        return Map.of("items", enrichedSeries);
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enrichedSeries);
+        return result;
     }
 
     /**
@@ -122,10 +127,11 @@ public class SerieService {
         logger.info("Récupération des séries notées");
         List<Serie> series = serieRepository.findByRatingIsNotNull();
         List<Map<String, Object>> enriched = enrichPosterPath(series);
-        return Map.of(
-            "items", enriched,
-            "total", enriched.size()
-        );
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enriched);
+        result.put("total", enriched.size());
+        return result;
     }
 
     /**
@@ -165,10 +171,10 @@ public class SerieService {
         TmdbSerieDto tmdbSerie = tmdbService.getSerieDetails(tmdbId);
         Serie localSerie = serieRepository.findByTmdbId(tmdbId).orElse(null);
         
-        return Map.of(
-            "tmdb", tmdbSerie,
-            "local", localSerie
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("tmdb", tmdbSerie);
+        result.put("local", localSerie);
+        return result;
     }
 
     /**
@@ -338,7 +344,9 @@ public class SerieService {
                     try {
                         CompletableFuture<TmdbSerieDto> future = tmdbService.getSerieDetailsAsync(serie.getTmdbId());
                         TmdbSerieDto tmdbDetails = future.join(); // Attendre le résultat
-                        serieMap.put("tmdb", Map.of("poster_path", tmdbDetails.getPosterPath()));
+                        Map<String, Object> tmdbMap = new HashMap<>();
+                        tmdbMap.put("poster_path", tmdbDetails.getPosterPath());
+                        serieMap.put("tmdb", tmdbMap);
                     } catch (Exception e) {
                         logger.debug("Impossible d'enrichir le poster pour la série {}: {}", 
                             serie.getId(), e.getMessage());

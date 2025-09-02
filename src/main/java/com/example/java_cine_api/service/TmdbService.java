@@ -5,6 +5,9 @@ import com.example.java_cine_api.exception.TmdbApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -17,7 +20,6 @@ import java.util.concurrent.Executors;
 
 @Service
 public class TmdbService {
-    
 
     private static final Logger logger = LoggerFactory.getLogger(TmdbService.class);
 
@@ -43,8 +45,13 @@ public class TmdbService {
                 .toUriString();
 
         try {
-            @SuppressWarnings("unchecked")
-            TmdbSearchResponseDto<TmdbMovieDto> response = restTemplate.getForObject(url, TmdbSearchResponseDto.class);
+            ParameterizedTypeReference<TmdbSearchResponseDto<TmdbMovieDto>> typeRef = 
+                new ParameterizedTypeReference<TmdbSearchResponseDto<TmdbMovieDto>>() {};
+            
+            ResponseEntity<TmdbSearchResponseDto<TmdbMovieDto>> responseEntity = 
+                restTemplate.exchange(url, HttpMethod.GET, null, typeRef);
+            
+            TmdbSearchResponseDto<TmdbMovieDto> response = responseEntity.getBody();
             logger.debug("Trouvé {} films pour la requête '{}'", 
                 response != null ? response.getResults().size() : 0, query);
             return response;
@@ -67,8 +74,13 @@ public class TmdbService {
                 .toUriString();
 
         try {
-            @SuppressWarnings("unchecked")
-            TmdbSearchResponseDto<TmdbSerieDto> response = restTemplate.getForObject(url, TmdbSearchResponseDto.class);
+            ParameterizedTypeReference<TmdbSearchResponseDto<TmdbSerieDto>> typeRef = 
+                new ParameterizedTypeReference<TmdbSearchResponseDto<TmdbSerieDto>>() {};
+            
+            ResponseEntity<TmdbSearchResponseDto<TmdbSerieDto>> responseEntity = 
+                restTemplate.exchange(url, HttpMethod.GET, null, typeRef);
+            
+            TmdbSearchResponseDto<TmdbSerieDto> response = responseEntity.getBody();
             logger.debug("Trouvé {} séries pour la requête '{}'", 
                 response != null ? response.getResults().size() : 0, query);
             return response;
@@ -91,8 +103,13 @@ public class TmdbService {
                 .toUriString();
 
         try {
-            @SuppressWarnings("unchecked")
-            TmdbSearchResponseDto<TmdbMultiDto> response = restTemplate.getForObject(url, TmdbSearchResponseDto.class);
+            ParameterizedTypeReference<TmdbSearchResponseDto<TmdbMultiDto>> typeRef = 
+                new ParameterizedTypeReference<TmdbSearchResponseDto<TmdbMultiDto>>() {};
+            
+            ResponseEntity<TmdbSearchResponseDto<TmdbMultiDto>> responseEntity = 
+                restTemplate.exchange(url, HttpMethod.GET, null, typeRef);
+            
+            TmdbSearchResponseDto<TmdbMultiDto> response = responseEntity.getBody();
             
             if (response != null && response.getResults() != null) {
                 // Filtrer pour ne garder que les films et séries

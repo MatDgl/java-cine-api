@@ -2,7 +2,7 @@
 -- Exécuté automatiquement au démarrage de PostgreSQL
 
 -- Table Movie
-CREATE TABLE IF NOT EXISTS movie (
+CREATE TABLE IF NOT EXISTS Movie (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     tmdb_id INTEGER UNIQUE,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS movie (
 );
 
 -- Table Serie
-CREATE TABLE IF NOT EXISTS serie (
+CREATE TABLE IF NOT EXISTS Serie (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     tmdb_id INTEGER UNIQUE,

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -100,7 +101,9 @@ public class MovieService {
         List<Movie> movies = movieRepository.findAllByOrderByCreatedAtDesc();
         List<Map<String, Object>> enrichedMovies = enrichPosterPath(movies);
         
-        return Map.of("items", enrichedMovies);
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enrichedMovies);
+        return result;
     }
 
     /**
@@ -112,7 +115,9 @@ public class MovieService {
         List<Movie> movies = movieRepository.findByWishlistTrue();
         List<Map<String, Object>> enrichedMovies = enrichPosterPath(movies);
         
-        return Map.of("items", enrichedMovies);
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enrichedMovies);
+        return result;
     }
 
     /**
@@ -122,10 +127,11 @@ public class MovieService {
         logger.info("Récupération des films notés");
         List<Movie> movies = movieRepository.findByRatingIsNotNull();
         List<Map<String, Object>> enriched = enrichPosterPath(movies);
-        return Map.of(
-            "items", enriched,
-            "total", enriched.size()
-        );
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", enriched);
+        result.put("total", enriched.size());
+        return result;
     }
 
     /**
@@ -165,10 +171,10 @@ public class MovieService {
         TmdbMovieDto tmdbMovie = tmdbService.getMovieDetails(tmdbId);
         Movie localMovie = movieRepository.findByTmdbId(tmdbId).orElse(null);
         
-        return Map.of(
-            "tmdb", tmdbMovie,
-            "local", localMovie
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("tmdb", tmdbMovie);
+        result.put("local", localMovie);
+        return result;
     }
 
     /**
@@ -209,12 +215,12 @@ public class MovieService {
         String trimmedQuery = query != null ? query.trim() : "";
         
         if (trimmedQuery.isEmpty()) {
-            return Map.of(
-                "query", trimmedQuery,
-                "limit", limit,
-                "total", 0,
-                "results", List.of()
-            );
+            Map<String, Object> emptyResult = new HashMap<>();
+            emptyResult.put("query", trimmedQuery);
+            emptyResult.put("limit", limit);
+            emptyResult.put("total", 0);
+            emptyResult.put("results", List.of());
+            return emptyResult;
         }
         
         logger.info("Recherche de films pour la requête: {} (limite: {})", trimmedQuery, limit);
@@ -222,12 +228,12 @@ public class MovieService {
         var tmdbResponse = tmdbService.searchMovies(trimmedQuery);
         
         if (tmdbResponse == null || tmdbResponse.getResults() == null) {
-            return Map.of(
-                "query", trimmedQuery,
-                "limit", limit,
-                "total", 0,
-                "results", List.of()
-            );
+            Map<String, Object> emptyResult = new HashMap<>();
+            emptyResult.put("query", trimmedQuery);
+            emptyResult.put("limit", limit);
+            emptyResult.put("total", 0);
+            emptyResult.put("results", List.of());
+            return emptyResult;
         }
         
         var limitedResults = tmdbResponse.getResults().stream()
@@ -244,24 +250,26 @@ public class MovieService {
             .collect(Collectors.toMap(Movie::getTmdbId, movie -> movie));
         
         var results = limitedResults.stream()
-            .map(tmdbMovie -> Map.of(
-                "type", "movie",
-                "tmdbId", tmdbMovie.getId(),
-                "title", tmdbMovie.getTitle(),
-                "poster_path", tmdbMovie.getPosterPath(),
-                "overview", tmdbMovie.getOverview(),
-                "release_date", tmdbMovie.getReleaseDate(),
-                "vote_average", tmdbMovie.getVoteAverage(),
-                "local", existingMap.get(tmdbMovie.getId())
-            ))
+            .map(tmdbMovie -> {
+                Map<String, Object> movieMap = new HashMap<>();
+                movieMap.put("type", "movie");
+                movieMap.put("tmdbId", tmdbMovie.getId());
+                movieMap.put("title", tmdbMovie.getTitle());
+                movieMap.put("poster_path", tmdbMovie.getPosterPath());
+                movieMap.put("overview", tmdbMovie.getOverview());
+                movieMap.put("release_date", tmdbMovie.getReleaseDate());
+                movieMap.put("vote_average", tmdbMovie.getVoteAverage());
+                movieMap.put("local", existingMap.get(tmdbMovie.getId()));
+                return movieMap;
+            })
             .collect(Collectors.toList());
         
-        return Map.of(
-            "query", trimmedQuery,
-            "limit", limit,
-            "total", results.size(),
-            "results", results
-        );
+        Map<String, Object> searchResult = new HashMap<>();
+        searchResult.put("query", trimmedQuery);
+        searchResult.put("limit", limit);
+        searchResult.put("total", results.size());
+        searchResult.put("results", results);
+        return searchResult;
     }
 
     // Méthodes utilitaires privées
@@ -312,18 +320,18 @@ public class MovieService {
     }
 
     private Map<String, Object> convertMovieToMap(Movie movie) {
-        return Map.of(
-            "id", movie.getId(),
-            "title", movie.getTitle(),
-            "tmdbId", movie.getTmdbId(),
-            "rating", movie.getRating(),
-            "wishlist", movie.getWishlist(),
-            "review", movie.getReview() != null ? movie.getReview() : "",
-            "viewCount", movie.getViewCount(),
-            "watched", movie.getWatched(),
-            "createdAt", movie.getCreatedAt(),
-            "updatedAt", movie.getUpdatedAt()
-        );
+        Map<String, Object> movieMap = new HashMap<>();
+        movieMap.put("id", movie.getId());
+        movieMap.put("title", movie.getTitle());
+        movieMap.put("tmdbId", movie.getTmdbId());
+        movieMap.put("rating", movie.getRating());
+        movieMap.put("wishlist", movie.getWishlist());
+        movieMap.put("review", movie.getReview() != null ? movie.getReview() : "");
+        movieMap.put("viewCount", movie.getViewCount());
+        movieMap.put("watched", movie.getWatched());
+        movieMap.put("createdAt", movie.getCreatedAt());
+        movieMap.put("updatedAt", movie.getUpdatedAt());
+        return movieMap;
     }
 
     /**
@@ -338,7 +346,10 @@ public class MovieService {
                     try {
                         CompletableFuture<TmdbMovieDto> future = tmdbService.getMovieDetailsAsync(movie.getTmdbId());
                         TmdbMovieDto tmdbDetails = future.join(); // Attendre le résultat
-                        movieMap.put("tmdb", Map.of("poster_path", tmdbDetails.getPosterPath()));
+                        
+                        Map<String, Object> tmdbMap = new HashMap<>();
+                        tmdbMap.put("poster_path", tmdbDetails.getPosterPath());
+                        movieMap.put("tmdb", tmdbMap);
                     } catch (Exception e) {
                         logger.debug("Impossible d'enrichir le poster pour le film {}: {}", 
                             movie.getId(), e.getMessage());

@@ -1,74 +1,58 @@
-version: '3.8'
-
 services:
   # Base de données PostgreSQL
-  postgres:
-    image: postgres:15-alpine
-    container_name: cine-postgres
+  postgresql:
+    image: postgres
+    container_name: postgresql
+    restart: always
     environment:
-      POSTGRES_DB: cine
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # API Java Spring Boot
-  java-cine-api:
-    build: .
-    container_name: java-cine-api
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cine
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: admin
       TMDB_BEARER_TOKEN: ${TMDB_BEARER_TOKEN}
-      TMDB_BASE_URL: https://api.themoviedb.org/3
+      TMDB_BASE_URL: ${TMDB_BASE_URL}
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - postgresql
     volumes:
       - api_logs:/app/logs
 
-  # Interface d'administration PostgreSQL (optionnel)
+  # PgAdmin
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: cine-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@cineapi.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      - postgresql
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-    profiles:
-      - admin
 
 volumes:
   postgres_data:
-    driver: local
+    # driver: local
   pgadmin_data:
-    driver: local
   api_logs:
-    driver: local
 
 networks:
   default:

@@ -5,6 +5,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Fichiers de configuration sensibles
+.env
+.env.local
+.env.example
+
 ### STS ###
 .apt_generated
 .classpath

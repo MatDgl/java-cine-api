@@ -4,11 +4,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Arrays;
 
 @Configuration
@@ -21,11 +24,46 @@ public class ApplicationConfig {
     private String allowedOrigins;
 
     /**
-     * Configuration du RestTemplate avec l'intercepteur pour les requêtes TMDB
+     * Configuration du RestTemplate avec proxy automatique depuis les variables d'environnement
      */
     @Bean
     public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        
+        // Configuration automatique du proxy depuis les variables d'environnement
+        String httpProxy = System.getProperty("http.proxy", System.getenv("HTTP_PROXY"));
+        String httpsProxy = System.getProperty("https.proxy", System.getenv("HTTPS_PROXY"));
+        
+        // Utiliser HTTPS_PROXY en priorité pour les requêtes HTTPS
+        String proxyUrl = httpsProxy != null ? httpsProxy : httpProxy;
+        
+        if (proxyUrl != null && !proxyUrl.isEmpty()) {
+            try {
+                // Parser l'URL du proxy (format: http://host:port)
+                if (proxyUrl.startsWith("http://")) {
+                    String[] parts = proxyUrl.substring(7).split(":");
+                    if (parts.length == 2) {
+                        String proxyHost = parts[0];
+                        int proxyPort = Integer.parseInt(parts[1]);
+                        
+                        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
+                        factory.setProxy(proxy);
+                        
+                        System.out.println("🌐 Configuration proxy détectée: " + proxyHost + ":" + proxyPort);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Erreur lors de la configuration du proxy: " + e.getMessage());
+            }
+        } else {
+            System.out.println("ℹ️  Aucun proxy configuré - connexion directe");
+        }
+        
+        // Configuration des timeouts
+        factory.setConnectTimeout(30000); // 30 secondes
+        factory.setReadTimeout(30000); // 30 secondes
+        
+        RestTemplate restTemplate = new RestTemplate(factory);
         
         // Ajouter l'intercepteur pour les headers TMDB
         ClientHttpRequestInterceptor tmdbInterceptor = (request, body, execution) -> {
