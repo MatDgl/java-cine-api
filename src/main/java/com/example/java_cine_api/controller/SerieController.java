@@ -6,8 +6,8 @@ import com.example.java_cine_api.service.SerieService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,22 +16,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/serie")
+@Slf4j
+@RequiredArgsConstructor
 public class SerieController {
 
-    private static final Logger logger = LoggerFactory.getLogger(SerieController.class);
-
     private final SerieService serieService;
-
-    public SerieController(SerieService serieService) {
-        this.serieService = serieService;
-    }
 
     /**
      * Crée une nouvelle série manuellement
      */
     @PostMapping
     public ResponseEntity<Serie> create(@Valid @RequestBody CreateSerieDto createSerieDto) {
-        logger.info("Requête POST /serie - Création d'une série: {}", createSerieDto.getTitle());
+        log.info("Requête POST /serie - Création d'une série: {}", createSerieDto.getTitle());
         Serie serie = serieService.create(createSerieDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(serie);
     }
@@ -41,7 +37,7 @@ public class SerieController {
      */
     @PostMapping("/tmdb")
     public ResponseEntity<Serie> createFromTmdb(@Valid @RequestBody CreateSerieFromTmdbDto createFromTmdbDto) {
-        logger.info("Requête POST /serie/tmdb - Création depuis TMDB ID: {}", createFromTmdbDto.getTmdbId());
+        log.info("Requête POST /serie/tmdb - Création depuis TMDB ID: {}", createFromTmdbDto.getTmdbId());
         Serie serie = serieService.createFromTmdb(createFromTmdbDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(serie);
     }
@@ -51,7 +47,7 @@ public class SerieController {
      */
     @GetMapping
     public ResponseEntity<Map<String, Object>> findAll() {
-        logger.info("Requête GET /serie - Récupération de toutes les séries");
+        log.info("Requête GET /serie - Récupération de toutes les séries");
         Map<String, Object> result = serieService.findAll();
         return ResponseEntity.ok(result);
     }
@@ -61,7 +57,7 @@ public class SerieController {
      */
     @GetMapping("/wishlist")
     public ResponseEntity<Map<String, Object>> findWishlist() {
-        logger.info("Requête GET /serie/wishlist - Récupération des séries en wishlist");
+        log.info("Requête GET /serie/wishlist - Récupération des séries en wishlist");
         Map<String, Object> result = serieService.findWishlist();
         return ResponseEntity.ok(result);
     }
@@ -71,7 +67,7 @@ public class SerieController {
      */
     @GetMapping("/rated")
     public ResponseEntity<Map<String, Object>> findRated() {
-        logger.info("Requête GET /serie/rated - Récupération des séries notées");
+        log.info("Requête GET /serie/rated - Récupération des séries notées");
         Map<String, Object> result = serieService.findRated();
         return ResponseEntity.ok(result);
     }
@@ -87,7 +83,7 @@ public class SerieController {
             @Max(value = 50, message = "La limite ne peut pas dépasser 50") 
             Integer limit) {
         
-        logger.info("Requête GET /serie/search - Recherche: '{}' (limite: {})", query, limit);
+        log.info("Requête GET /serie/search - Recherche: '{}' (limite: {})", query, limit);
         
         int safeLimit = Math.max(1, Math.min(50, limit));
         Map<String, Object> result = serieService.search(query, safeLimit);
@@ -100,7 +96,7 @@ public class SerieController {
      */
     @GetMapping("/tmdb/{tmdbId}")
     public ResponseEntity<Map<String, Object>> getTmdbSerie(@PathVariable Integer tmdbId) {
-        logger.info("Requête GET /serie/tmdb/{} - Récupération des détails TMDB", tmdbId);
+        log.info("Requête GET /serie/tmdb/{} - Récupération des détails TMDB", tmdbId);
         Map<String, Object> result = serieService.findByTmdbIdWithTmdbDetails(tmdbId);
         return ResponseEntity.ok(result);
     }
@@ -110,7 +106,7 @@ public class SerieController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> findOne(@PathVariable Long id) {
-        logger.info("Requête GET /serie/{} - Récupération de la série", id);
+        log.info("Requête GET /serie/{} - Récupération de la série", id);
         Map<String, Object> result = serieService.findOne(id);
         return ResponseEntity.ok(result);
     }
@@ -120,7 +116,7 @@ public class SerieController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Serie> update(@PathVariable Long id, @Valid @RequestBody UpdateSerieDto updateSerieDto) {
-        logger.info("Requête PUT /serie/{} - Mise à jour de la série", id);
+        log.info("Requête PUT /serie/{} - Mise à jour de la série", id);
         Serie serie = serieService.update(id, updateSerieDto);
         return ResponseEntity.ok(serie);
     }
@@ -130,7 +126,7 @@ public class SerieController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Serie> remove(@PathVariable Long id) {
-        logger.info("Requête DELETE /serie/{} - Suppression de la série", id);
+        log.info("Requête DELETE /serie/{} - Suppression de la série", id);
         Serie serie = serieService.remove(id);
         return ResponseEntity.ok(serie);
     }

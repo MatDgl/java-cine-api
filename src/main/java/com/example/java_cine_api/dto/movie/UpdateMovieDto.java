@@ -3,7 +3,13 @@ package com.example.java_cine_api.dto.movie;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateMovieDto {
 
     @Size(max = 255, message = "Le titre ne peut pas dépasser 255 caractères")
@@ -24,74 +30,4 @@ public class UpdateMovieDto {
     private Integer viewCount;
 
     private Boolean watched;
-
-    // Constructeurs
-    public UpdateMovieDto() {}
-
-    public UpdateMovieDto(String title, Integer tmdbId, Float rating, Boolean wishlist, String review, Integer viewCount, Boolean watched) {
-        this.title = title;
-        this.tmdbId = tmdbId;
-        this.rating = rating;
-        this.wishlist = wishlist;
-        this.review = review;
-        this.viewCount = viewCount;
-        this.watched = watched;
-    }
-
-    // Getters et Setters
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public Integer getTmdbId() {
-        return tmdbId;
-    }
-
-    public void setTmdbId(Integer tmdbId) {
-        this.tmdbId = tmdbId;
-    }
-
-    public Float getRating() {
-        return rating;
-    }
-
-    public void setRating(Float rating) {
-        this.rating = rating;
-    }
-
-    public Boolean getWishlist() {
-        return wishlist;
-    }
-
-    public void setWishlist(Boolean wishlist) {
-        this.wishlist = wishlist;
-    }
-
-    public String getReview() {
-        return review;
-    }
-
-    public void setReview(String review) {
-        this.review = review;
-    }
-
-    public Integer getViewCount() {
-        return viewCount;
-    }
-
-    public void setViewCount(Integer viewCount) {
-        this.viewCount = viewCount;
-    }
-
-    public Boolean getWatched() {
-        return watched;
-    }
-
-    public void setWatched(Boolean watched) {
-        this.watched = watched;
-    }
 }

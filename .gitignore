@@ -8,7 +8,6 @@ build/
 # Fichiers de configuration sensibles
 .env
 .env.local
-.env.example
 
 ### STS ###
 .apt_generated

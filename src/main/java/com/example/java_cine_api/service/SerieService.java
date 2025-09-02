@@ -5,8 +5,8 @@ import com.example.java_cine_api.dto.tmdb.TmdbSerieDto;
 import com.example.java_cine_api.entity.Serie;
 import com.example.java_cine_api.exception.ResourceNotFoundException;
 import com.example.java_cine_api.repository.SerieRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -19,23 +19,18 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
+@RequiredArgsConstructor
 public class SerieService {
-
-    private static final Logger logger = LoggerFactory.getLogger(SerieService.class);
 
     private final SerieRepository serieRepository;
     private final TmdbService tmdbService;
-
-    public SerieService(SerieRepository serieRepository, TmdbService tmdbService) {
-        this.serieRepository = serieRepository;
-        this.tmdbService = tmdbService;
-    }
 
     /**
      * Crée une nouvelle série
      */
     public Serie create(CreateSerieDto dto) {
-        logger.info("Création d'une nouvelle série: {}", dto.getTitle());
+        log.info("Création d'une nouvelle série: {}", dto.getTitle());
         
         Serie serie = new Serie(
             dto.getTitle(),
@@ -48,7 +43,7 @@ public class SerieService {
         );
         
         Serie savedSerie = serieRepository.save(serie);
-        logger.debug("Série créée avec l'ID: {}", savedSerie.getId());
+        log.debug("Série créée avec l'ID: {}", savedSerie.getId());
         return savedSerie;
     }
 
@@ -57,7 +52,7 @@ public class SerieService {
      * existe déjà on met simplement à jour les champs utilisateurs fournis.
      */
     public Serie createFromTmdb(CreateSerieFromTmdbDto dto) {
-        logger.info("Création/mise à jour d'une série depuis TMDB ID: {}", dto.getTmdbId());
+        log.info("Création/mise à jour d'une série depuis TMDB ID: {}", dto.getTmdbId());
         
         // Récupérer les détails depuis TMDB
         TmdbSerieDto tmdbSerie = tmdbService.getSerieDetails(dto.getTmdbId());
@@ -67,7 +62,7 @@ public class SerieService {
         
         if (existingSerie != null) {
             // Mettre à jour la série existante avec les nouvelles données utilisateur
-            logger.debug("Mise à jour de la série existante: {}", existingSerie.getTitle());
+            log.debug("Mise à jour de la série existante: {}", existingSerie.getTitle());
             updateSerieFromDto(existingSerie, dto, tmdbSerie);
             return serieRepository.save(existingSerie);
         } else {
@@ -87,7 +82,7 @@ public class SerieService {
             );
             
             Serie savedSerie = serieRepository.save(newSerie);
-            logger.debug("Nouvelle série créée depuis TMDB: {}", savedSerie.getTitle());
+            log.debug("Nouvelle série créée depuis TMDB: {}", savedSerie.getTitle());
             return savedSerie;
         }
     }
@@ -96,7 +91,7 @@ public class SerieService {
      * Récupère toutes les séries avec enrichissement du poster_path
      */
     public Map<String, Object> findAll() {
-        logger.info("Récupération de toutes les séries");
+        log.info("Récupération de toutes les séries");
         
         List<Serie> series = serieRepository.findAllByOrderByCreatedAtDesc();
         List<Map<String, Object>> enrichedSeries = enrichPosterPath(series);
@@ -110,7 +105,7 @@ public class SerieService {
      * Récupère toutes les séries en wishlist avec enrichissement du poster_path
      */
     public Map<String, Object> findWishlist() {
-        logger.info("Récupération des séries en wishlist");
+        log.info("Récupération des séries en wishlist");
         
         List<Serie> series = serieRepository.findByWishlistTrue();
         List<Map<String, Object>> enrichedSeries = enrichPosterPath(series);
@@ -124,7 +119,7 @@ public class SerieService {
      * Récupère toutes les séries notées avec enrichissement du poster_path
      */
     public Map<String, Object> findRated() {
-        logger.info("Récupération des séries notées");
+        log.info("Récupération des séries notées");
         List<Serie> series = serieRepository.findByRatingIsNotNull();
         List<Map<String, Object>> enriched = enrichPosterPath(series);
         
@@ -139,7 +134,7 @@ public class SerieService {
      */
     @Transactional(readOnly = true)
     public Map<String, Object> findOne(Long id) {
-        logger.info("Récupération de la série avec ID: {}", id);
+        log.info("Récupération de la série avec ID: {}", id);
         
         Serie serie = serieRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Série", id));
@@ -152,7 +147,7 @@ public class SerieService {
                 TmdbSerieDto tmdbSerie = tmdbService.getSerieDetails(serie.getTmdbId());
                 result.put("tmdb", tmdbSerie);
             } catch (Exception e) {
-                logger.warn("Impossible de récupérer les détails TMDB pour la série {}: {}", 
+                log.warn("Impossible de récupérer les détails TMDB pour la série {}: {}", 
                     serie.getId(), e.getMessage());
             }
         }
@@ -166,7 +161,7 @@ public class SerieService {
      */
     @Transactional(readOnly = true)
     public Map<String, Object> findByTmdbIdWithTmdbDetails(Integer tmdbId) {
-        logger.info("Récupération de la série via TMDB ID: {}", tmdbId);
+        log.info("Récupération de la série via TMDB ID: {}", tmdbId);
         
         TmdbSerieDto tmdbSerie = tmdbService.getSerieDetails(tmdbId);
         Serie localSerie = serieRepository.findByTmdbId(tmdbId).orElse(null);
@@ -181,7 +176,7 @@ public class SerieService {
      * Met à jour une série
      */
     public Serie update(Long id, UpdateSerieDto dto) {
-        logger.info("Mise à jour de la série avec ID: {}", id);
+        log.info("Mise à jour de la série avec ID: {}", id);
         
         Serie serie = serieRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Série", id));
@@ -189,7 +184,7 @@ public class SerieService {
         updateSerieFromUpdateDto(serie, dto);
         
         Serie updatedSerie = serieRepository.save(serie);
-        logger.debug("Série mise à jour: {}", updatedSerie.getTitle());
+        log.debug("Série mise à jour: {}", updatedSerie.getTitle());
         return updatedSerie;
     }
 
@@ -197,13 +192,13 @@ public class SerieService {
      * Supprime une série
      */
     public Serie remove(Long id) {
-        logger.info("Suppression de la série avec ID: {}", id);
+        log.info("Suppression de la série avec ID: {}", id);
         
         Serie serie = serieRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Série", id));
         
         serieRepository.delete(serie);
-        logger.debug("Série supprimée: {}", serie.getTitle());
+        log.debug("Série supprimée: {}", serie.getTitle());
         return serie;
     }
 
@@ -223,7 +218,7 @@ public class SerieService {
             );
         }
         
-        logger.info("Recherche de séries pour la requête: {} (limite: {})", trimmedQuery, limit);
+        log.info("Recherche de séries pour la requête: {} (limite: {})", trimmedQuery, limit);
         
         var tmdbResponse = tmdbService.searchSeries(trimmedQuery);
         
@@ -348,7 +343,7 @@ public class SerieService {
                         tmdbMap.put("poster_path", tmdbDetails.getPosterPath());
                         serieMap.put("tmdb", tmdbMap);
                     } catch (Exception e) {
-                        logger.debug("Impossible d'enrichir le poster pour la série {}: {}", 
+                        log.debug("Impossible d'enrichir le poster pour la série {}: {}", 
                             serie.getId(), e.getMessage());
                         // On continue sans poster_path
                     }
