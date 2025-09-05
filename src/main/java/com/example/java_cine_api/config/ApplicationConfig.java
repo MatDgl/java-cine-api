@@ -9,6 +9,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -82,10 +83,15 @@ public class ApplicationConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Utiliser les origines définies dans application.properties
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
-        
+
+        // Utiliser les origines définies dans application.properties (en supprimant les espaces)
+        configuration.setAllowedOrigins(
+            Arrays.stream(allowedOrigins.split(","))
+                  .map(String::trim)
+                  .filter(s -> !s.isEmpty())
+                  .toList()
+        );
+
         // Méthodes HTTP autorisées
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
@@ -102,5 +108,13 @@ public class ApplicationConfig {
         source.registerCorsConfiguration("/**", configuration);
         
         return source;
+    }
+
+    /**
+     * Filtre CORS global basé sur la configuration ci-dessus
+     */
+    @Bean
+    public CorsFilter corsFilter(CorsConfigurationSource corsConfigurationSource) {
+        return new CorsFilter(corsConfigurationSource);
     }
 }
