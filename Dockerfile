@@ -7,7 +7,7 @@
 # ENTRYPOINT ["java", "-jar", "app.jar"]
 
 # Build local puis copie des fichiers (problème proxy)
-FROM eclipse-temurin:17-jre
+FROM amazoncorretto:17-alpine-jdk
 WORKDIR /app
 COPY build/libs/*.jar app.jar
 EXPOSE 8080
